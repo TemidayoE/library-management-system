@@ -60,8 +60,55 @@ class BookRetrievalUpdateDeleteView(RateLimitHeadersMixin, APIView):
         }
         return Response(response_data)
   
-#class BookRetrievalUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-  #queryset = Book.objects.all()
-  #serializer_class = BookSerializer
-  #throttle_classes = [BookThrottle]
+    def patch(self, request, pk):
+        try:
+            book = Book.objects.get(pk=pk)
+        except Book.DoesNotExist:
+          return Response(
+            error_response(
+              status= "error",
+              code=404,
+              message= f'Book with id: {pk}, not found',
+              details= "No books was found with the provided ID, try another"
+            ), status=status.HTTP_404_NOT_FOUND
+          )
+          
+        serializer = BookSerializer(book, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+          serializer.save()
+          return Response({
+            "status": "Success",
+            "message": "Book updated successfully",
+            "book": serializer.data
+          }, status=status.HTTP_200_OK
+                          )
+
+        return Response(
+            {
+              "status": "error",
+              "code": 404,
+              "message": "Invalid data",
+              "errors": serializer.errors,
+            }, status= status.HTTP_400_BAD_REQUEST
+          )
   
+    def delete(self, request, pk):
+        try:
+            book = Book.objects.get(pk=pk)
+        except Book.DoesNotExist:
+          return Response(
+            error_response(
+              status= "error",
+              code=404,
+              message= f'Book with id: {pk}, not found',
+              details= "No books was found with the provided ID, try another"
+            ), status=status.HTTP_404_NOT_FOUND
+          )
+        
+        book.delete()
+        return Response({
+            "status": "Success",
+            "message": "Book deleted successfully",
+          }, status=status.HTTP_204_NO_CONTENT
+        )
