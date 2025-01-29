@@ -19,5 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', lambda request: HttpResponse('Welcome to the Library Management System API!')),
     path('api/', include('lib_app.urls'))
 ]
